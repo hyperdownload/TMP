@@ -55,12 +55,12 @@ class Functions(Database):
     
     def on_doubleClick(self, event):
         self.clear_entries()
-        
+
         for row in self.lista_productos.selection():
             c1, c2, c3, c4, c5, c6, c7, c8, \
-                c9, c10, c11, c12, c13, c14, c15, c16 = \
-                    self.lista_productos.item(row, "values")
-            
+                    c9, c10, c11, c12, c13, c14, c15, c16 = \
+                        self.lista_productos.item(row, "values")
+
             self.cod_entry.insert(END, c1)
             self.producto_entry.insert(END, c2)
             self.lote_entry.insert(END, c3)
@@ -71,15 +71,15 @@ class Functions(Database):
             self.grupo_listBox.set(c9)
             self.status_entry.insert(END, c10)
             self.data_entry.insert(END, c11)
-            
+
             self.barcode_entry.insert(END, c12)
             if self.barcode_entry.get() != "":
                 try:
                     self.img_barcode.configure(image=self.image_barcode(f"{self.lote_entry.get()}.png", (222, 100)))
-                except:
+                except Exception:
                     messagebox.showinfo(
                         "Not found", message="La imagen de codigo de barras no fue encontrada!")
-            
+
             self.reventa_entry.insert(END, f"$ {float(c13):.2f}")
             self.últimas_salidas = c14
             self.gestor_listBox.set(c15)
@@ -109,9 +109,9 @@ class Functions(Database):
         self.lista_productos.delete(*self.lista_productos.get_children())
 
         if self.busca.get() == "" \
-            and self.busca_grupo_listBox.get() == "Departamento":
-                
-                self.select_database()
+                and self.busca_grupo_listBox.get() == "Departamento":
+
+            self.select_database()
 
         else:
             if self.busca.get():
@@ -133,7 +133,7 @@ class Functions(Database):
                             """
 
             elif self.busca_grupo_listBox.get() != "Departamento":
-                self.busca_grupo_listBox.set(self.busca_grupo_listBox.get() + "%")
+                self.busca_grupo_listBox.set(f"{self.busca_grupo_listBox.get()}%")
                 busca = self.busca_grupo_listBox.get()
 
                 query_select = f"""
@@ -200,19 +200,18 @@ class Functions(Database):
     
     def lote_on_off(self, activo=""):
         if activo == "off":
-            self.cnt_Salida.configure(state=DISABLED)
-            self.r_button_facturación.configure(state=DISABLED)
-            self.r_button_consumo.configure(state=DISABLED)
-
+            self._extracted_from_lote_on_off_3(DISABLED)
             self.lb_activo.configure(text="LOTE INactivo")
 
         else:
-            self.cnt_Salida.configure(state=NORMAL)
-            self.r_button_facturación.configure(state=NORMAL)
-            self.r_button_consumo.configure(state=NORMAL)
-
+            self._extracted_from_lote_on_off_3(NORMAL)
             if activo == "on":
                 self.lb_activo.configure(text="LOTE activo")
+
+    def _extracted_from_lote_on_off_3(self, state):
+        self.cnt_Salida.configure(state=state)
+        self.r_button_facturación.configure(state=state)
+        self.r_button_consumo.configure(state=state)
 
 
 class VentanaSalidas(Functions, FunctionsExtras):

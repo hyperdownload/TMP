@@ -50,32 +50,25 @@ def ingresar_admin():
     with sqlite3.connect("StockDatabase.db") as conn:
         verificar_agregado_admin = "SELECT * FROM usuarios WHERE id_usuario = ?"
 
-        sql_agregar_admin = """INSERT INTO usuarios (nombre_usuario, user, password_usuario, 
-        nivel_permiso, id_sucursal, borrado) VALUES (?, ?, ?, ?, ?, ? ) 
-        """
         cursor = conn.cursor()
 
         cursor.execute(verificar_agregado_admin, (1,))
 
         result = cursor.fetchone()
-        
+
         if not result:
+            sql_agregar_admin = """INSERT INTO usuarios (nombre_usuario, user, password_usuario, 
+        nivel_permiso, id_sucursal, borrado) VALUES (?, ?, ?, ?, ?, ? ) 
+        """
             cursor.execute(sql_agregar_admin, ("Mateo Marcos", "admin", "123456", "admin", 1, 0))
             conn.commit()
 
 def verificar_entrada_usuario():
     try:
         with open("usuario.txt", "r") as file:
-            contenido = file.readlines()
-
-            if contenido:
-                return int(contenido[0])
-            else:
-                return -1
-    except :
+            return int(contenido[0]) if (contenido := file.readlines()) else -1
+    except Exception:
         return -1
-    
-
 
 def escribir_numero_en_archivo(numero):
     
@@ -86,13 +79,6 @@ def insertar_sucursales():
     database_conexion = sqlite3.connect("StockDatabase.db")
     cursor = database_conexion.cursor()
 
-    # Definir las localidades a insertar
-    localidades = [
-        ("San Miguel", "Dirección 1", "123456789"),
-        ("Belgrano", "Dirección 2", "987654321"),
-        ("La Roca", "Dirección 3", "456789123")
-    ]
-
     # Verificar si la tabla sucursales ya tiene datos
     check_query = "SELECT COUNT(*) FROM sucursales"
     cursor.execute(check_query)
@@ -101,7 +87,14 @@ def insertar_sucursales():
     # Si no hay sucursales (COUNT(*) == 0), insertar los datos
     if result[0] == 0:
         insert_query = "INSERT INTO sucursales (nombre_sucursal, direccion_sucursal, telefono_sucursal) VALUES (?, ?, ?)"
-        
+
+        # Definir las localidades a insertar
+        localidades = [
+            ("San Miguel", "Dirección 1", "123456789"),
+            ("Belgrano", "Dirección 2", "987654321"),
+            ("La Roca", "Dirección 3", "456789123")
+        ]
+
         # Insertar las localidades
         cursor.executemany(insert_query, localidades)
         database_conexion.commit()
@@ -236,9 +229,9 @@ class Application(ctk.CTk):
 
 
     def cerrar_sesion(self):
-        respuesta = messagebox.askyesno("Cerrar sesión", "¿Estás seguro de que deseas cerrar sesión?")
-
-        if respuesta:
+        if respuesta := messagebox.askyesno(
+            "Cerrar sesión", "¿Estás seguro de que deseas cerrar sesión?"
+        ):
             for widget in self.winfo_children():
                 widget.destroy()
 
@@ -264,13 +257,6 @@ class Application(ctk.CTk):
         self.cursor = self.database_conexion.cursor()
 
     def insertar_sucursales(self):
-        # Definir las localidades a insertar
-        localidades = [
-            ("San Miguel", "Dirección 1", "123456789"),
-            ("Belgrano", "Dirección 2", "987654321"),
-            ("La Roca", "Dirección 3", "456789123")
-        ]
-
         # Verificar si la tabla sucursales ya tiene datos
         check_query = "SELECT COUNT(*) FROM sucursales"
         self.cursor.execute(check_query)
@@ -279,11 +265,17 @@ class Application(ctk.CTk):
         # Si no hay sucursales (COUNT(*) == 0), insertar los datos
         if result[0] == 0:
             insert_query = "INSERT INTO sucursales (nombre_sucursal, direccion_sucursal, telefono_sucursal) VALUES (?, ?, ?)"
-            
+
+            # Definir las localidades a insertar
+            localidades = [
+                ("San Miguel", "Dirección 1", "123456789"),
+                ("Belgrano", "Dirección 2", "987654321"),
+                ("La Roca", "Dirección 3", "456789123")
+            ]
+
             # Insertar las localidades
             self.cursor.executemany(insert_query, localidades)
             self.database_conexion.commit()
-
 
     def show_login(self):
         self.clear_frame()
@@ -321,9 +313,6 @@ class Application(ctk.CTk):
 
         login_button = ctk.CTkButton(self.login_frame, text="Iniciar sesión", command=self.login, fg_color="#000000", text_color="#FFFFFF", hover_color="#404040")
         login_button.place(x=80, y=315)
-
-        register_button = ctk.CTkButton(self.login_frame, text="Registrarse", command=self.show_register, fg_color="transparent", hover=False, text_color="#000000")
-        register_button.place(x=80, y=355)
 
     def show_register(self):
         self.clear_frame()
@@ -419,15 +408,14 @@ class Application(ctk.CTk):
         verificar_existencia_usuario = "SELECT user FROM usuarios WHERE user = ? AND borrado = 0"
         self.cursor.execute(verificar_existencia_usuario, (self.user_entry.get(), ))
 
-        existencia = self.cursor.fetchone()
-        if existencia:
+        if existencia := self.cursor.fetchone():
             messagebox.showinfo("Error", message="El usuario ya existe")
             return
 
         registrar_usuario = "INSERT INTO usuarios (nombre_usuario, user, password_usuario, nivel_permiso, id_sucursal, borrado) VALUES (?, ?, ?, ?, ?, ?)"
         self.cursor.execute(registrar_usuario, (self.name_entry.get(), self.user_entry.get(),
                                                 self.password_entry.get(),"empleado", sucursal, 0))
-        
+
         self.database_conexion.commit()
         messagebox.showinfo("Exito", message="Usuario registrado exitosamente.")
         self.show_login()
@@ -488,9 +476,9 @@ class WindowConfig(ctk.CTkToplevel):
         ctk.CTkButton(self, text="CANCELAR",  width=75, font=("Cascadia Code", 15, "bold"), command=self.destroy ).place(x=185, y=360)  
 
 if __name__ == "__main__":
-    create_table()
-    ingresar_admin()
-    insertar_sucursales()
+    #create_table()
+    #ingresar_admin()
+    #insertar_sucursales()
     id = verificar_entrada_usuario()
     
     aplicacion = Application(id)

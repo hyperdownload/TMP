@@ -20,10 +20,11 @@ class FunctionsExtras:
         img: Objeto imagen que se puede usar en un botón o widget 
     '''  
     def image_button(self, nameImage, scale=tuple):
-        img = ctk.CTkImage(light_image=Image.open("image/" + nameImage),# Carga la imagen para el tema claro
-                           dark_image=Image.open("image/" + nameImage),# Carga la imagen para el tema oscuro
-                           size=(scale))# Escala la imagen a las dimensiones proporcionadas  
-        return img # Devuelve la imagen escalada 
+        return ctk.CTkImage(
+            light_image=Image.open(f"image/{nameImage}"),
+            dark_image=Image.open(f"image/{nameImage}"),
+            size=(scale),
+        ) 
     ''' 
         Carga una imagen de código de barras y la escala 
         Parámetros: 
@@ -33,10 +34,11 @@ class FunctionsExtras:
         img: Objeto imagen que se puede usar en un widget 
     '''  
     def image_barcode(self, nameImage, scale=tuple):
-        img = ctk.CTkImage(light_image=Image.open("barCodes/" + nameImage),
-                           dark_image=Image.open("barCodes/" + nameImage),
-                           size=(scale))
-        return img
+        return ctk.CTkImage(
+            light_image=Image.open(f"barCodes/{nameImage}"),
+            dark_image=Image.open(f"barCodes/{nameImage}"),
+            size=(scale),
+        )
     ''' 
         Genera un código de barras EAN13 basado en un lote de producto 
         Parámetros: 
@@ -47,22 +49,18 @@ class FunctionsExtras:
     def generate_barCode(self, id_product):
         if id_product == "": # Si no se proporciona un lote, muestra un mensaje de advertencia
             messagebox.showinfo("Please select", message="Por favor, informe el lote del producto!")
-        else: # Pregunta si desea generar un código de barras para el lote especificado  
-            if messagebox.askyesno("Generate Barcode", message=f"Generar codigo de barras para el lote: {id_product}"):
-                try:
-                    numbers = ""
-                    for i in range(12): # Genera una secuencia de 12 números aleatorios 
-                        numbers += str(randint(1, 9))
-                        
-                    # Genera el código de barras EAN13 y lo guarda como una imagen 
-                    code = EAN13(numbers, writer=ImageWriter())
-                    code.save(f"barCodes/{id_product}")
-                    
-                    messagebox.showinfo("Success", message="Código de barras generado con exito!")
-                    
-                    return numbers
-                except FileNotFoundError:
-                    messagebox.showerror("Invalid", message="Lote inválido!")
+        elif messagebox.askyesno("Generate Barcode", message=f"Generar codigo de barras para el lote: {id_product}"):
+            try:
+                numbers = "".join(str(randint(1, 9)) for _ in range(12))
+                # Genera el código de barras EAN13 y lo guarda como una imagen 
+                code = EAN13(numbers, writer=ImageWriter())
+                code.save(f"barCodes/{id_product}")
+
+                messagebox.showinfo("Success", message="Código de barras generado con exito!")
+
+                return numbers
+            except FileNotFoundError:
+                messagebox.showerror("Invalid", message="Lote inválido!")
         ''' 
         Desactiva la opción de copiar texto en un widget de entrada de texto. 
         Permite la copia cuando el estado es correcto. 

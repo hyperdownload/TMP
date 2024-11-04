@@ -3,8 +3,8 @@ from sqlite3 import Error
 from tkinter import messagebox
 import os
 
-camino = os.path.dirname(__file__) 
-connection = sqlite3.connect(camino + "/StockDatabase.db")
+camino = os.path.dirname(__file__)
+connection = sqlite3.connect(f"{camino}/StockDatabase.db")
 
 
 class Database:
@@ -40,13 +40,9 @@ class Database:
                 con = connection.cursor()
                 con.execute(query_sql)
                 response = con.fetchall()
-                
+
                 if column_names:
-                    lista_columns = []
-                    for i in set(response):
-                        lista_columns.append(i[0])
-                    return lista_columns
-        
+                    return [i[0] for i in set(response)]
         except Error as e:
             messagebox.showerror(f"{e}", message="No fue posible encontrar el registro!")
         else:
@@ -56,7 +52,10 @@ class Database:
         try:
             with connection:
                 con = connection.cursor()
-                con.execute(f"UPDATE stock SET activo = 'borrado' WHERE id=?", (id_target_delete,))
+                con.execute(
+                    "UPDATE stock SET activo = 'borrado' WHERE id=?",
+                    (id_target_delete,),
+                )
         except Error as e:
             messagebox.showerror(f"{e}", message="No fue posible realizar el registro!")
         else:
@@ -69,17 +68,14 @@ class Database:
             cursor = conn.cursor()
 
             cursor.execute(sql_recuadar_datos, (id, ))
-            datos_usuario = cursor.fetchone()
-            
-            if datos_usuario:
+            if datos_usuario := cursor.fetchone():
                 return datos_usuario
-            else:
-                 messagebox.showinfo("Error", message="EL id de la persona no esta")
-                 return
-            
-
-
-def create_table():
+            messagebox.showinfo("Error", message="EL id de la persona no esta")
+            return
+        
+        
+        
+if __name__ == "__main__":
     table = """
     CREATE TABLE IF NOT EXISTS stock (
         id              INTEGER     PRIMARY KEY AUTOINCREMENT,

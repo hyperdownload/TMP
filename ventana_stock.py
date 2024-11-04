@@ -3,6 +3,7 @@ from tkinter import ttk
 from tkinter import messagebox
 import customtkinter as ctk
 import awesometkinter as atk
+import contextlib
 from tkcalendar import DateEntry
 import os
 
@@ -12,13 +13,8 @@ from functions_base import *
 def verificar_entrada_usuario():
     try:
         with open("usuario.txt", "r") as file:
-            contenido = file.readlines()
-
-            if contenido:
-                return int(contenido[0])
-            else:
-                return -1
-    except :
+            return int(contenido[0]) if (contenido := file.readlines()) else -1
+    except Exception:
         return -1
 
 class FunctionsEstoque(Database):
@@ -36,8 +32,7 @@ class FunctionsEstoque(Database):
         else:
             self.num_barcode.delete(0, END)
 
-            numbers = self.generate_barCode(self.lote_entry.get())
-            if numbers:
+            if numbers := self.generate_barCode(self.lote_entry.get()):
                 self.num_barcode.insert(END, numbers)
 
     def variables_entries(self):
@@ -101,8 +96,8 @@ class FunctionsEstoque(Database):
 
         for row in self.lista_productos.selection():
             c1, c2, c3, c4, c5, c6, c7, c8, \
-                c9, c10, c11, c12, c13, c14, c15 = \
-                    self.lista_productos.item(row, "values")
+                    c9, c10, c11, c12, c13, c14, c15 = \
+                        self.lista_productos.item(row, "values")
             self.cod_entry.insert(END, c1)
             self.cod_entry.configure(state=DISABLED)
             self.producto_entry.insert(END, c3)
@@ -121,7 +116,7 @@ class FunctionsEstoque(Database):
             if self.num_barcode.get() != "":
                 try:
                     self.img_barcode.configure(image=self.image_barcode(f"{self.lote_entry.get()}.png", (222, 125)))
-                except:
+                except Exception:
                     messagebox.showinfo("Not found", message="¡No se encontró la imagen del código de barras!")
 
             self.check_var.set(c15)
@@ -164,70 +159,65 @@ class FunctionsEstoque(Database):
 
         if self.código == "" or not self.código.isdigit():
             messagebox.showerror("ID invalid", message="¡Seleccione el producto a actualizar!")
+        elif self.producto == "":
+            messagebox.showinfo("Aviso", message="¡Ingrese la descripción del producto!")
+
         else:
-            if self.producto == "":
-                messagebox.showinfo("Aviso", message="¡Ingrese la descripción del producto!")
-            
-            else:
-                if self.lote == "":
-                    try:
-                        self.barcode = ""
-                        self.img_barcode.configure(image=None)
-                        os.remove(f"barCodes/{self.n_lote}.png")
-                    except:
-                        pass
-                
-                query_sql = """
+            self._extracted_from_update_product_12()
+
+    def _extracted_from_update_product_12(self):
+        if self.lote == "":
+            with contextlib.suppress(Exception):
+                self.barcode = ""
+                self.img_barcode.configure(image=None)
+                os.remove(f"barCodes/{self.n_lote}.png")
+        if self.stock == "":
+            self.stock = 0
+        if self.costo == "":
+            self.costo = 0
+        if self.reventa == "":
+            self.reventa = 0
+        if self.min == "":
+            self.min = 0
+
+        lista_dados = [self.producto, self.grupo, self.medida, self.lote, self.proveedor, 
+                       self.gestor, self.stock, self.min, self.costo, self.reventa, 
+                       self.Fecha, self.stock, self.barcode, self.activo,
+                       self.código]
+
+        if messagebox.askyesno("Update", message="Actualizar Registro?"):
+            query_sql = """
                     UPDATE stock SET
                         producto=?, grupo=?, medida=?, lote=?, proveedor=?, responsable=?, stock=?, 
                         stock_mín=?, costo_unitario=?, valor_venta=?, fecha_entrada=?, entradas=?, barcode=?, activo=?
                     WHERE id=?
                 """
-                
-                if self.stock == "":
-                    self.stock = 0
-                if self.costo == "":
-                    self.costo = 0
-                if self.reventa == "":
-                    self.reventa = 0
-                if self.min == "":
-                    self.min = 0
-                
-                lista_dados = [self.producto, self.grupo, self.medida, self.lote, self.proveedor, 
-                               self.gestor, self.stock, self.min, self.costo, self.reventa, 
-                               self.Fecha, self.stock, self.barcode, self.activo,
-                               self.código]
 
-                if messagebox.askyesno("Update", message="Actualizar Registro?"):
-                    self.dml_database(query_sql, lista_dados)
+            self.dml_database(query_sql, lista_dados)
 
-                self.widgets_top()
-                self.select_database()
+        self.widgets_top()
+        self.select_database()
 
     def delete_product(self):
         self.variables_entries()
 
         if self.código == "" or not self.código.isdigit():
             messagebox.showerror("ID invalid", message="¡Seleccione el producto a eliminar!")
-        else:
-            if messagebox.askyesno("Delete", message=f"Eliminar el registro: {self.cod_entry.get()}?"):
-                self.dml_delete(self.código)
-                self.img_barcode.configure(image=None)
-                try:
-                    os.remove(f"barCodes/{self.lote_entry.get()}.png")
-                except:
-                    pass
-
-                self.widgets_top()
-                self.select_database()
+        elif messagebox.askyesno("Delete", message=f"Eliminar el registro: {self.cod_entry.get()}?"):
+            self.dml_delete(self.código)
+            self.img_barcode.configure(image=None)
+            with contextlib.suppress(Exception):
+                os.remove(f"barCodes/{self.lote_entry.get()}.png")
+            self.widgets_top()
+            self.select_database()
 
     def search_database(self):
         self.lista_productos.delete(*self.lista_productos.get_children())
 
         if self.producto_entry.get() == "" \
-            and self.grupo_listBox.get() == "" \
-                and self.lote_entry.get() == "" \
-                    and self.proveedor_listBox.get() == "":
+                    and self.grupo_listBox.get() == "" \
+                        and self.lote_entry.get() == "" \
+                            and self.proveedor_listBox.get() == "":
 
             self.select_database()
         else:
@@ -237,7 +227,7 @@ class FunctionsEstoque(Database):
                 busca = self.producto_entry.get()
 
             elif self.grupo_listBox.get():
-                self.grupo_listBox.set(self.grupo_listBox.get() + "%")
+                self.grupo_listBox.set(f"{self.grupo_listBox.get()}%")
                 target = "grupo"
                 busca = self.grupo_listBox.get()
 
@@ -247,7 +237,7 @@ class FunctionsEstoque(Database):
                 busca = self.lote_entry.get()
 
             elif self.proveedor_listBox.get():
-                self.proveedor_listBox.set(self.proveedor_listBox.get() + "%")
+                self.proveedor_listBox.set(f"{self.proveedor_listBox.get()}%")
                 target = "proveedor"
                 busca = self.proveedor_listBox.get()
 

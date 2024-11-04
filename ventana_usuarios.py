@@ -52,9 +52,7 @@ class VentanaUsuarios:
 
     def image_button(self, image_path, size):
         try:
-            image = ctk.CTkImage(light_image=PIL.Image.open(image_path), size=size)  
-            return image
-        
+            return ctk.CTkImage(light_image=PIL.Image.open(image_path), size=size)
         except Exception as e:
             (f"Error al cargar la imagen: {e}")
             return None
@@ -194,11 +192,9 @@ class VentanaUsuarios:
             messagebox.showinfo("Error", message="Elija un usuario")
             return
         # Asignar los valores actuales si no se modifican
-        nuevo_rol = self.valores[4]  
-        nueva_password = self.valores[3]  
+        nuevo_rol = self.valores[4]
+        nueva_password = self.valores[3]
         nueva_sucursal = self.valores[5]  
-
-        localidades = ["San Miguel", "Belgrano", "La Roca"]
 
         if self.entry_rol_nueva.get():
             nuevo_rol = self.entry_rol_nueva.get()
@@ -216,26 +212,33 @@ class VentanaUsuarios:
         if nuevo_rol or nueva_sucursal or nueva_password:
             nueva_sucursal_id = 0
 
+            localidades = ["San Miguel", "Belgrano", "La Roca"]
+
             for i, x in enumerate(localidades):
                 if self.entry_sucursal_nueva.get() == x:
                     nueva_sucursal_id = i + 1
 
             with sqlite3.connect("StockDatabase.db") as conn:
-                cursor = conn.cursor()
-
-                sql_modificar = """UPDATE usuarios 
-                                SET nivel_permiso = ?, id_sucursal = ?, password_usuario = ? 
-                                WHERE id_usuario = ?"""
-
-                cursor.execute(sql_modificar, (nuevo_rol, nueva_sucursal_id, nueva_password, self.valores[0]))
-                conn.commit()
-
-                self.frame_tabla.destroy()
-                self.recaudar_datos_usuario()
-                self.tabla_usuarios()
+                self._extracted_from_guardar_cambios_33(
+                    conn, nuevo_rol, nueva_sucursal_id, nueva_password
+                )
         else:
             messagebox.showinfo("Error", message="Ingrese algún campo")
             return
+
+    def _extracted_from_guardar_cambios_33(self, conn, nuevo_rol, nueva_sucursal_id, nueva_password):
+        cursor = conn.cursor()
+
+        sql_modificar = """UPDATE usuarios 
+                                SET nivel_permiso = ?, id_sucursal = ?, password_usuario = ? 
+                                WHERE id_usuario = ?"""
+
+        cursor.execute(sql_modificar, (nuevo_rol, nueva_sucursal_id, nueva_password, self.valores[0]))
+        conn.commit()
+
+        self.frame_tabla.destroy()
+        self.recaudar_datos_usuario()
+        self.tabla_usuarios()
 
 
 #----------Tabla----------
@@ -270,6 +273,5 @@ class VentanaUsuarios:
 
 
     def on_double_click(self, event):
-        selected_item = self.tabla.selection()
-        if selected_item:
+        if selected_item := self.tabla.selection():
             self.valores = self.tabla.item(selected_item, "values")

@@ -92,8 +92,8 @@ class FunctionsEntradas(Database):
 
         for row in self.lista_productos.selection():
             c1, c2, c3, c4, c5, c6, c7, c8, c9, \
-                c10, c11, c12, c13, c14, c15, c16 = \
-                self.lista_productos.item(row, "values")
+                    c10, c11, c12, c13, c14, c15, c16 = \
+                    self.lista_productos.item(row, "values")
 
             self.cod_entry.insert(END, c1)
             self.producto_entry.insert(END, c2)
@@ -112,7 +112,7 @@ class FunctionsEntradas(Database):
             if self.barcode_entry.get() != "":
                 try:
                     self.img_barcode.configure(image=self.image_barcode(f"{self.lote_entry.get()}.png", (222, 100)))
-                except:
+                except Exception:
                     messagebox.showinfo("Not found", message="La imagen del código de barras no fue encontrada!")
 
             self.lote_on_off(c15)
@@ -125,39 +125,42 @@ class FunctionsEntradas(Database):
             messagebox.showerror("ID invalid", message="Seleccione un producto para entrada!")
         elif self.cnt == "" or not self.cnt.isdigit():
             messagebox.showerror("Invalid input", message="Informe a quantidade de entrada do producto!")
-        
+
         else:
             try:
-                add_stock = int(self.cnt) + int(self.stock)
-
-                query_update = f"""
-                    UPDATE stock SET
-                        proveedor=?, lote=?, medida=?, stock=?, costo_unitario=?, valor_venta=?, fecha_entrada=?, responsable=?
-                    WHERE id=? AND activo != 'borrado AND id_sucursal = {self.id_sucursal}'
-                """
-                
-                if self.costo == "":
-                    self.costo = 0
-                if self.reventa == "":
-                    self.reventa = 0
-                
-                dados = [self.proveedor, self.lote, self.medida, add_stock, 
-                         self.costo, self.reventa, self.fecha_entrada.get(), self.gestor,
-                         self.code]
-                self.dml_database(query_update, dados)
-            except:
+                self._extracted_from_save_register_11()
+            except Exception:
                 messagebox.showerror("Error", message="Algo deu errado! :( \n Não foi possível realizar o registro")
 
         self.clear_entries()
         self.select_database()
 
+    def _extracted_from_save_register_11(self):
+        add_stock = int(self.cnt) + int(self.stock)
+
+        query_update = f"""
+                    UPDATE stock SET
+                        proveedor=?, lote=?, medida=?, stock=?, costo_unitario=?, valor_venta=?, fecha_entrada=?, responsable=?
+                    WHERE id=? AND activo != 'borrado AND id_sucursal = {self.id_sucursal}'
+                """
+
+        if self.costo == "":
+            self.costo = 0
+        if self.reventa == "":
+            self.reventa = 0
+
+        dados = [self.proveedor, self.lote, self.medida, add_stock, 
+                 self.costo, self.reventa, self.fecha_entrada.get(), self.gestor,
+                 self.code]
+        self.dml_database(query_update, dados)
+
     def search_database(self):
         self.lista_productos.delete(*self.lista_productos.get_children())
 
         if self.busca.get() == "" \
-            and self.busca_mes.get() == "" \
-                and self.busca_año.get() == "" \
-                    and self.status_listBox.get() == "Status":
+                and self.busca_mes.get() == "" \
+                    and self.busca_año.get() == "" \
+                        and self.status_listBox.get() == "Status":
 
             self.select_database()
 
@@ -183,7 +186,7 @@ class FunctionsEntradas(Database):
                             """
 
             elif self.status_listBox.get() != "Status":
-                self.status_listBox.set(self.status_listBox.get() + "%")
+                self.status_listBox.set(f"{self.status_listBox.get()}%")
                 busca = self.status_listBox.get()
 
                 query_select = f"""
@@ -220,26 +223,21 @@ class FunctionsEntradas(Database):
 
     def lote_on_off(self, activo=""):
         if activo == "off":
-            self.medida_listBox.configure(state=DISABLED)
-            self.proveedor_listBox.configure(state=DISABLED)
-            self.lote_entry.configure(state=DISABLED)
-            self.cnt_entrada.configure(state=DISABLED)
-            self.costo_entry.configure(state=DISABLED)
-            self.reventa_entry.configure(state=DISABLED)
-
+            self._extracted_from_lote_on_off_3(DISABLED)
             self.lb_activo.configure(text="LOTE INactivo")
 
         else:
-            self.medida_listBox.configure(state=NORMAL)
-            self.proveedor_listBox.configure(state=NORMAL)
-            self.lote_entry.configure(state=NORMAL)
-            self.cnt_entrada.configure(state=NORMAL)
-            self.costo_entry.configure(state=NORMAL)
-            self.reventa_entry.configure(state=NORMAL)
-
+            self._extracted_from_lote_on_off_3(NORMAL)
             if activo == "on":
                 self.lb_activo.configure(text="LOTE activo")
 
+    def _extracted_from_lote_on_off_3(self, state):
+        self.medida_listBox.configure(state=state)
+        self.proveedor_listBox.configure(state=state)
+        self.lote_entry.configure(state=state)
+        self.cnt_entrada.configure(state=state)
+        self.costo_entry.configure(state=state)
+        self.reventa_entry.configure(state=state)
 
 class VentanaEntradas(FunctionsEntradas, FunctionsExtras):
     def __init__(self, root, id):

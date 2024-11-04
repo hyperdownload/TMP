@@ -1,3 +1,4 @@
+import contextlib
 from tkinter import *
 from tkinter import ttk
 import customtkinter as ctk
@@ -8,6 +9,7 @@ from tkinter import CENTER
 from tkinter import ttk
 
 from con_database import *
+from functions_base import *
 from functions_base import *
 
 
@@ -182,14 +184,12 @@ class FunctionsResumen(Database):
         """
         data_return = Database().dql_database(query_select)
 
-        if Resumen:
-            for dados in data_return:
-                if dados[7] > 0:
+        for dados in data_return:
+            if dados[7] > 0:
+                if Resumen:
                     self.total_movimentos += 1
                     self.valor_facturacion += dados[9]
-        else:
-            for dados in data_return:
-                if dados[7] > 0:
+                else:
                     self.lista_facturacion.insert("", END, values=dados)
 
     def search_facturación(self):
@@ -253,7 +253,7 @@ class FunctionsResumen(Database):
         data_return = Database().dql_database(query_select)
 
         for dados in data_return:
-            if dados[1] == None or dados[1] == "":
+            if dados[1] is None or dados[1] == "":
                 continue
             try:
             # Parsea la cadena de texto en formato dd/mm/yyyy y obtiene los valores enteros
@@ -262,7 +262,7 @@ class FunctionsResumen(Database):
 
             except ValueError:
 
-                continue                
+                continue
             # entradas realizadas en los últimos 30 días
             data_atual = date.today()
             fecha_entrada = date(año, mes, dia)
@@ -280,8 +280,8 @@ class FunctionsResumen(Database):
         self.lista_nuevos.delete(*self.lista_nuevos.get_children())
 
         if self.busca.get() == "" \
-            and self.busca_grupo_listBox.get() == "" \
-                and self.busca_status_listBox.get() == "":
+                and self.busca_grupo_listBox.get() == "" \
+                    and self.busca_status_listBox.get() == "":
 
             sql = f"""
                     SELECT
@@ -318,7 +318,7 @@ class FunctionsResumen(Database):
         data_return = Database().dql_database(sql)
         if data_return is not None:
             for dados in data_return:
-                if dados[1] == None or dados[1] == "":
+                if dados[1] is None or dados[1] == "":
                     continue
                 try:
                     # Analiza la cadena de texto en formato dd/mm/aaaa y obtener los valores ingresados
@@ -352,9 +352,9 @@ class FunctionsResumen(Database):
         data_return = Database().dql_database(sql)
 
         for dados in data_return:
-            if dados[1] == None or dados[1] == "":
+            if dados[1] is None or dados[1] == "":
                 continue
-            
+
             try:
                 # Analiza la cadena de texto en formato dd/mm/aaaa hh:mm:ss y obtiene los valores ingresados
                 Fecha = datetime.strptime(dados[1], "%d/%m/%Y %H:%M:%S")
@@ -378,8 +378,8 @@ class FunctionsResumen(Database):
         self.lista_parados.delete(*self.lista_parados.get_children())
 
         if self.busca.get() == "" \
-            and self.busca_grupo_listBox.get() == "" \
-                and self.busca_status_listBox.get() == "":
+                and self.busca_grupo_listBox.get() == "" \
+                    and self.busca_status_listBox.get() == "":
 
             sql = f"""
                     SELECT
@@ -417,9 +417,9 @@ class FunctionsResumen(Database):
         data_return = Database().dql_database(sql)
         if data_return is not None:
             for dados in data_return:
-                if dados[1] == None or dados[1] == "":
+                if dados[1] is None or dados[1] == "":
                     continue
-                
+
                 try:
                     Fecha = datetime.strptime(dados[1], "%d/%m/%Y %H:%M:%S")
                     año, mes, dia = Fecha.year, Fecha.month, Fecha.day
@@ -435,9 +435,8 @@ class FunctionsResumen(Database):
                     continue
 
         self.clear_search()
-    
     def clear_search(self):
-        try:
+        with contextlib.suppress(Exception):
             self.busca.delete(0, END)
             self.busca.configure(placeholder_text="Buscar Producto, Nº Lote, Código de Barras")
             self.busca_grupo_listBox.set("")
@@ -447,9 +446,6 @@ class FunctionsResumen(Database):
             self.busca_año.delete(0, END)
             self.busca_año.configure(placeholder_text="Año")
             self.busca_facturación.set("")
-        except:
-            pass
-
 # ----------------------------------------------------------------------------------------------------------------- #
 
 
